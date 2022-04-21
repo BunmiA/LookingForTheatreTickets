@@ -34,10 +34,13 @@ Also update the get_ticket_dates method to scrape the right elements from a new 
 ### Scheduling 
 
 Open Crontab
-`nano crontab -e`
+`crontab -e`
 
-enter schedule detals
+enter schedule details thane save and close vi
 `0 1 * * * python LookingForTheatreTickets/main.py`
 
 This will run the scrape at minute = 0 , hour = 1, day = * : every day, month=: * every month, weekday= * every weekday.
 Reference https://crontab.guru/ 
+
+list Crontab jobs
+`crontab -l`
