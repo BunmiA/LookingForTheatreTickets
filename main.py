@@ -52,7 +52,7 @@ def should_send_text(available_dates):
     # This method helps avoid sending messages every hour if no dates
     logging.debug('Checking if we should send message')
     now = datetime.now()
-    if now.hour == config.NO_TICKET_TEXT_TIME or len(available_dates) > 0:
+    if (now.hour == config.NO_TICKET_TEXT_TIME and now.minute < 5) or len(available_dates) > 0:
         logging.debug('will be sending an text')
         return True
     return False

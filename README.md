@@ -1,7 +1,8 @@
 # LookingForTheatreTickets
 
 ## Description 
-Python tool that scarps a theatre site looking to see if tickets has become available and sends text when avilaible
+Python tool that scarps a theatre site looking to see if tickets has become available and sends text when available 
+and sends a text using twilio when there is a ticket. Play in question is "DADDY" A MELODRAMA by Jeremy O. Harris
 
 ## Setup
 This documentation assumes this is ran using a MAC OS with home brew and python 3 installed
