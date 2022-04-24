@@ -5,6 +5,13 @@ import config
 import time
 from datetime import datetime
 import logging
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.service import Service
+# from selenium.webdriver.remote.remote_connection import LOGGER
+# LOGGER.setLevel(logging.ERROR)
+
+from selenium.webdriver.remote.remote_connection import LOGGER as seleniumLogger
+seleniumLogger.setLevel(logging.ERROR)
 
 URL = "https://ticketing.almeida.co.uk/events/5403"
 
@@ -12,28 +19,33 @@ URL = "https://ticketing.almeida.co.uk/events/5403"
 HAPPY_GIPH = "https://giphy.com/embed/5GoVLqeAOo6PK"
 SAD_GIPH = "https://giphy.com/embed/l1AsyjZ8XLd1V7pUk"
 
-logging.basicConfig(filename='LookingForTheatreTickets.log', level=logging.DEBUG)
 
 
 def get_ticket_dates():
-    # Scrapes website for chnage
+    # Scrapes website for change
     logging.debug('Getting ticket details')
     opts = Options()
-    opts.set_headless()
+    # opts.log= False
+    opts.add_argument("--disable-logging")
+    opts.add_argument("--log-level=3")
+    opts.headless = True
+
     assert opts.headless  # Operating in headless mode
-    browser = Firefox(options=opts)
+
+    serv = Service(config.GECKO_DRIVER)
+    browser = Firefox(service=serv,options=opts)
     browser.get(URL)
 
     # Getting Theatre Dates
-    result = browser.find_elements_by_css_selector('span.tn-prod-list-item__perf-date')
+    result = browser.find_elements(By.CLASS_NAME,'tn-prod-list-item__perf-date')
     dates = [date.text for date in result if date.text != '']
 
     # Getting Play Times
-    result = browser.find_elements_by_css_selector('span.tn-prod-list-item__perf-time')
+    result = browser.find_elements(By.CLASS_NAME,'tn-prod-list-item__perf-time')
     times = [time.text for time in result if time.text != '']
 
     # Getting Play Ticket Status
-    result = browser.find_elements_by_css_selector('span.tn-prod-list-item__perf-property--action')
+    result = browser.find_elements(By.CLASS_NAME,'tn-prod-list-item__perf-property--action')
     status = [status.text for status in result if status.text != '']
 
     # Asserts that data is accurate and equal in length
@@ -45,6 +57,8 @@ def get_ticket_dates():
         if status[i] not in ['Tickets not on sale', 'Sold out']:
             available_dates.append(i)
 
+    browser.close()
+
     return available_dates, zip(dates, times, status)
 
 
@@ -52,7 +66,7 @@ def should_send_text(available_dates):
     # This method helps avoid sending messages every hour if no dates
     logging.debug('Checking if we should send message')
     now = datetime.now()
-    if (now.hour == config.NO_TICKET_TEXT_TIME and now.minute < 5) or len(available_dates) > 0:
+    if (now.hour in config.NO_TICKET_TEXT_TIME and now.minute < 5) or len(available_dates) > 0:
         logging.debug('will be sending an text')
         return True
     return False
@@ -83,6 +97,11 @@ def send_text(message_body, gipy):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='LookingForTheatreTickets.log', level=logging.CRITICAL,
+                        format='%(asctime)s %(levelname)-8s %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+
+
     available_dates, ticket_data = get_ticket_dates()
     if should_send_text(available_dates):
         message_body, giph_url = create_text(available_dates, ticket_data)
